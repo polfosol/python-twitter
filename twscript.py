@@ -18,11 +18,11 @@ path = easygui.fileopenbox(default = '*.txt')
 
 import tweepy
 auth = tweepy.OAuthHandler(
-    "strlen=25",
-    "strlen=50")
+    "placeholder for: API key",
+    "placeholder for: API secret key")
 auth.set_access_token(
-    "strlrn=50",
-    "strlen=45")
+    "placeholder for: Access token",
+    "placeholder for: Access token secret")
 api = tweepy.API(auth)
 
 import time as clock
