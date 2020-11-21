@@ -13,8 +13,8 @@ path = easygui.fileopenbox(default = '*.txt')
 # from tkinter import filedialog
 # root = tk.Tk()
 # root.withdraw()
-# thr = filedialog.askopenfile(mode="r", filetypes=[('Thread', ['.txt'])]).name
-# path = win.path.realpath(thr)
+# fo = filedialog.askopenfile(mode="r", filetypes=[('Thread', ['.txt'])]).name
+# path = win.path.realpath(fo)
 
 import tweepy
 auth = tweepy.OAuthHandler(
