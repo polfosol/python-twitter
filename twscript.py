@@ -46,10 +46,10 @@ for i in range(len(tweets)):
     reply = "" if i == 0 else str(i)
     tweet = tweets[i].strip()
     if i == 0 and tweet.startswith("REPLY<"):
-        reply = tweet.split("<")[1].split(">")[0]
+        reply = tweet[:tweet.find('>')].split("<")[1]
         tweet = tweet[tweet.find('\n') + 1:].strip()
     if tweet.endswith(">MEDIA"):
-        media = tweet[tweet.rfind('\n') + 1:].split("<")[1].split(">")[0]
+        media = tweet[tweet.rfind('<') + 1:].split(">")[0]
         tweet = tweet[:tweet.rfind('\n')].strip()
     add_tweet_to_thread(tweet, media.strip(), reply)
     print("tweet", i+1, "is sent!")
