@@ -25,7 +25,6 @@ auth.set_access_token(
     "placeholder for: Access token secret")
 api = tweepy.API(auth)
 
-import time
 def add_tweet_to_thread(text, image, mention):
     reply = mention
     images = []
@@ -36,7 +35,13 @@ def add_tweet_to_thread(text, image, mention):
         reply = api.user_timeline(screen_name = 'polfosol',
                                   count = 1,
                                   include_rts = False)[0].id_str
-    api.update_status(status = text, media_ids = images, in_reply_to_status_id = reply)
+    api.update_status(status = text,
+                      media_ids = images,
+                      in_reply_to_status_id = reply,
+                      lat = 48.86,
+                      long = 2.35,
+                      display_coordinates = True,
+                      enable_dmcommands = True)
 
 mythread = open(path, "r", encoding = "utf8").read()
 tweets = mythread.split("`")
