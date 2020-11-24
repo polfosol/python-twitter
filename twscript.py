@@ -34,8 +34,7 @@ def add_tweet_to_thread(text, image, mention, attach):
     if len(attach) > 0:
         parameters.update(attachment_url = attach.strip())
     if len(image) > 0:
-        media = [api.media_upload(m).media_id_string for m in image.split("|")]
-        parameters.update(media_ids = media)
+        parameters.update(media_ids = image)
     if len(mention) > 3:
         parameters.update(in_reply_to_status_id = mention.strip())
         parameters.update(auto_populate_reply_metadata = True)
@@ -44,24 +43,30 @@ def add_tweet_to_thread(text, image, mention, attach):
         last = dict(screen_name = 'polfosol', count = 1, include_rts = False)
         last_id = api.user_timeline(**last)[0].id_str
         parameters.update(in_reply_to_status_id = last_id)
-    api.update_status(**parameters)
+    return api.update_status(**parameters).url
 
-mythread = open(path, "r", encoding = "utf8").read()
-tweets = mythread.split("`")
+content = open(path, "r", encoding = "utf8").read()
+tweets = content.split("`")
+thread = [['', [], '', ''] for t in tweets]
 
-for i in range(len(tweets)):
-    annex = ""
-    media = ""
-    reply = "" if i == 0 else str(i)
-    tweet = tweets[i].strip()
-    if i == 0 and tweet.startswith("REPLY<"):
-        reply = tweet[:tweet.find('>')].split("<")[1]
-        tweet = tweet[tweet.find('\n') + 1:].strip()
-    if tweet.endswith(">MEDIA"):
-        media = tweet[tweet.rfind('<') + 1:].split(">")[0]
-        tweet = tweet[:tweet.rfind('\n')].strip()
-    if tweet.endswith(">ATTACH"):
-        annex = tweet[tweet.rfind('<') + 1:].split(">")[0]
-        tweet = tweet[:tweet.rfind('\n')].strip()
-    add_tweet_to_thread(tweet, media.strip(), reply, annex)
-    print("tweet", i+1, "is sent!")
+for i in range(len(thread)):
+    text = tweets[i].strip()
+    if i > 0:
+        thread[i][2] = str(i)
+    elif text.startswith("REPLY<"):
+        thread[i][2] = text[:text.find('>')].split('<')[1]
+        text = text[text.find('\n') + 1:]
+    if text.endswith(">MEDIA"):
+        thread[i][1] = text[text.rfind('<') + 1:].split('>')[0].split('|')
+        text = text[:text.rfind('\n')].strip()
+    if text.endswith(">ATTACH"):
+        thread[i][3] = text[text.rfind('<') + 1:].split('>')[0]
+        text = text[:text.rfind('\n')].strip()
+    thread[i][0] = text
+
+for tweet in thread:
+    tweet[1] = [api.media_upload(m).media_id_string for m in tweet[1]]
+
+for tweet in thread:
+    t = add_tweet_to_thread(*tweet)
+    print("tweet", i+1, t)
