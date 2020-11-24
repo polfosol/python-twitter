@@ -26,17 +26,19 @@ auth.set_access_token(
 api = tweepy.API(auth)
 
 import time
-def add_tweet_to_thread(text, image, mention):
+def add_tweet_to_thread(text, image, mention, attach):
     parameters = dict(status = text,
-                      lat = 48.86, # Paris coordinates!
+                      lat = 48.86,
                       long = 2.35,
-                      display_coordinates = True,
-                      enable_dmcommands = True)
+                      display_coordinates = True)
+    if len(attach) > 0:
+        parameters.update(attachment_url = attach.strip())
     if len(image) > 0:
         media = [api.media_upload(m).media_id_string for m in image.split("|")]
         parameters.update(media_ids = media)
     if len(mention) > 3:
-        parameters.update(in_reply_to_status_id = mention)
+        parameters.update(in_reply_to_status_id = mention.strip())
+        parameters.update(auto_populate_reply_metadata = True)
     elif mention != "":
         time.sleep(.5)
         last = dict(screen_name = 'polfosol', count = 1, include_rts = False)
@@ -48,6 +50,7 @@ mythread = open(path, "r", encoding = "utf8").read()
 tweets = mythread.split("`")
 
 for i in range(len(tweets)):
+    annex = ""
     media = ""
     reply = "" if i == 0 else str(i)
     tweet = tweets[i].strip()
@@ -57,5 +60,8 @@ for i in range(len(tweets)):
     if tweet.endswith(">MEDIA"):
         media = tweet[tweet.rfind('<') + 1:].split(">")[0]
         tweet = tweet[:tweet.rfind('\n')].strip()
-    add_tweet_to_thread(tweet, media.strip(), reply)
+    if tweet.endswith(">ATTACH"):
+        annex = tweet[tweet.rfind('<') + 1:].split(">")[0]
+        tweet = tweet[:tweet.rfind('\n')].strip()
+    add_tweet_to_thread(tweet, media.strip(), reply, annex)
     print("tweet", i+1, "is sent!")
