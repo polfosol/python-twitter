@@ -34,18 +34,18 @@ def add_tweet_to_thread(text, media, attach, reply):
     return api.update_status(**parameters).id_str
 
 import sys
-import os
-import tkinter as tk
-from tkinter import filedialog as dialog
-# import easygui
+# import os
+# import tkinter as tk
+# from tkinter import filedialog as dialog
+import easygui
 def load_thread(textfile = ''):
     if len(textfile) > 0:
         return open(textfile, "r", encoding = "utf8").read()
-    root = tk.Tk()
-    root.withdraw()
-    f = dialog.askopenfile(mode = "r", filetypes = [('Text', ['.txt'])]).name
-    path = os.path.realpath(f)
-    # path = easygui.fileopenbox(default = '*.txt')
+    # root = tk.Tk()
+    # root.withdraw()
+    # f = dialog.askopenfile(mode = "r", filetypes = [('Text', ['.txt'])]).name
+    # path = os.path.realpath(f)
+    path = easygui.fileopenbox(default = '*.txt')
     return open(path, "r", encoding = "utf8").read()
 
 tweets = []
@@ -57,7 +57,7 @@ if __name__ == '__main__':
         pass
     tweets = load_thread(file).split("`")
     if len(tweets) == 0 or tweets[0] == '':
-        sys.exit("Error: thread is empty!")
+        raise SystemExit("Error: thread is empty!")
 
 """
 run something like: python e:/codes/python/twscript.py d:/threads/thread.txt
@@ -78,5 +78,12 @@ for i in range(len(thread)):
         text = text[:text.rfind('\n')].strip()
     thread[i][0] = text
     thread[i][3] = last
-    last = add_tweet_to_thread(*(thread[i]))
-    print("tweet", i+1, "is sent! id:", last)
+    try:
+        last = add_tweet_to_thread(*(thread[i]))
+    except:
+        last = 'error'
+        pass
+    if last == 'error':
+        sys.exit("Connection error or whatever!")
+    else:
+        print("tweet", i+1, "is sent! id:", last)
