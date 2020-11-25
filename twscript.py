@@ -58,7 +58,7 @@ if __name__ == '__main__':
         pass
     tweets = load_thread(file).split("`")
     if len(tweets) == 0 or tweets[0] == '':
-        raise SystemExit("Error: thread is empty!")
+        sys.exit("Error: thread is empty!")
 
 """
 run something like: python e:/codes/python/twscript.py d:/threads/thread.txt
@@ -79,12 +79,16 @@ for i in range(len(thread)):
         text = text[:text.rfind('\n')].strip()
     thread[i][0] = text
     thread[i][3] = last
-    try:
-        last = add_tweet_to_thread(*(thread[i]))
-    except:
-        last = 'error'
-        pass
-    if last == 'error':
-        sys.exit("Connection error or whatever!")
-    else:
-        print("tweet", i+1, "is sent! id:", last)
+    for j in [1, 2, 3]:
+        try:
+            last = add_tweet_to_thread(*(thread[i]))
+        except:
+            last = 'error'
+            pass
+        if last != 'error':
+            print("tweet", i+1, "is sent! id:", last)
+            break;
+        elif j < 3:
+            print("an error occurred. retrying...")
+        else:
+            raise SystemExit("Connection error or whatever!")
