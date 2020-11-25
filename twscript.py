@@ -39,7 +39,7 @@ import sys
 # import tkinter as tk
 # from tkinter import filedialog as dialog
 import easygui
-def load_thread(textfile = ''):
+def load_thread(textfile):
     if len(textfile) > 0:
         return open(textfile, "r", encoding = "utf8").read()
     # root = tk.Tk()
@@ -59,10 +59,6 @@ if __name__ == '__main__':
     tweets = load_thread(file).split("`")
     if len(tweets) == 0 or tweets[0] == '':
         sys.exit("Error: thread is empty!")
-
-"""
-run something like: python e:/codes/python/twscript.py d:/threads/thread.txt
-"""
 
 thread = [['', [], '', ''] for t in tweets]
 last = ''
