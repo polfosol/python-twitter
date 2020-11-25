@@ -23,7 +23,8 @@ def add_tweet_to_thread(text, media, attach, reply):
     if len(attach) > 0:
         parameters.update(attachment_url = attach.strip())
     if len(reply) > 0:
-        parameters.update(in_reply_to_status_id = reply.strip())
+        parameters.update(in_reply_to_status_id = reply.strip(' -'))
+    if reply.endswith('-'):
         parameters.update(auto_populate_reply_metadata = True)
     if len(media) > 0:
         images = [api.media_upload(m).media_id_string for m in media]
