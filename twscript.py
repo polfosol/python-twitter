@@ -5,17 +5,6 @@ Created on Fri Nov 20 19:33:11 2020
 @author: polfosol
 """
 
-# import easygui
-# path = easygui.fileopenbox(default = '*.txt')
-
-import os
-import tkinter as tk
-from tkinter import filedialog as dialog
-root = tk.Tk()
-root.withdraw()
-file = dialog.askopenfile(mode = "r", filetypes = [('Text', ['.txt'])]).name
-path = os.path.realpath(file)
-
 import tweepy
 auth = tweepy.OAuthHandler(
     "placeholder for: API key",
@@ -43,15 +32,42 @@ def add_tweet_to_thread(text, media, attach, reply):
         time.sleep(.5)
     return api.update_status(**parameters).id_str
 
-content = open(path, "r", encoding = "utf8").read()
-tweets = content.split("`")
-thread = [['', [], '', ''] for t in tweets]
-twlast = ''
+import sys
+import os
+import tkinter as tk
+from tkinter import filedialog as dialog
+# import easygui
+def load_thread(textfile = ''):
+    if len(textfile) > 0:
+        return open(textfile, "r", encoding = "utf8").read()
+    root = tk.Tk()
+    root.withdraw()
+    f = dialog.askopenfile(mode = "r", filetypes = [('Text', ['.txt'])]).name
+    path = os.path.realpath(f)
+    # path = easygui.fileopenbox(default = '*.txt')
+    return open(path, "r", encoding = "utf8").read()
 
+tweets = []
+if __name__ == '__main__':
+    file = ''
+    try:
+        file = sys.argv[1]
+    except:
+        pass
+    tweets = load_thread(file).split("`")
+    if len(tweets) == 0 or tweets[0] == '':
+        sys.exit("Error: thread is empty!")
+
+"""
+run something like: python e:/codes/python/twscript.py d:/threads/thread.txt
+"""
+
+thread = [['', [], '', ''] for t in tweets]
+last = ''
 for i in range(len(thread)):
     text = tweets[i].strip()
     if i == 0 and text.startswith("REPLY<"):
-        twlast = text[:text.find('>')].split('<')[1]
+        last = text[:text.find('>')].split('<')[1]
         text = text[text.find('\n') + 1:]
     if text.endswith(">MEDIA"):
         thread[i][1] = text[text.rfind('<') + 1:].split('>')[0].split('|')
@@ -60,8 +76,6 @@ for i in range(len(thread)):
         thread[i][2] = text[text.rfind('<') + 1:].split('>')[0]
         text = text[:text.rfind('\n')].strip()
     thread[i][0] = text
-
-for tweet in thread:
-    tweet[3] = twlast
-    twlast = add_tweet_to_thread(*tweet)
-    print("tweet", i+1, "is sent!")
+    thread[i][3] = last
+    last = add_tweet_to_thread(*(thread[i]))
+    print("tweet", i+1, "is sent! id:", last)
