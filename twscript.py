@@ -19,7 +19,8 @@ def add_tweet_to_thread(text, media, attach, reply):
     parameters = dict(status = text,
                       lat = 48.86,
                       long = 2.35,
-                      display_coordinates = True)
+                      display_coordinates = True,
+                      enable_dmcommands = True)
     if len(attach) > 0:
         parameters.update(attachment_url = attach.strip())
     if len(reply) > 0:
