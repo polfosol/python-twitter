@@ -6,7 +6,7 @@ Created on Fri Nov 20 19:33:11 2020
 """
 
 APIkey = "Enter your API key here"
-APIsecret = "then set the API secret key"
+APIConsumerSecret = "then set the API secret key"
 AccessToken = "here is your access token..."
 AccessTokenSecret = "and, access token secret"
 # >> Location is Paris, France (Yeah bitch!):
@@ -14,9 +14,25 @@ latitude = 48.86
 longitude = 2.35
 
 import tweepy
-auth = tweepy.OAuthHandler(APIkey, APIsecret)
+auth = tweepy.OAuthHandler(APIkey, APIConsumerSecret)
 auth.set_access_token(AccessToken, AccessTokenSecret)
 api = tweepy.API(auth)
+
+import os
+def upload_all_media(allfiles):
+    allmedia_ids = dict()
+    for file in (m for pack in allfiles for m in pack):
+        if not os.path.isfile(file):
+            allmedia_ids[file] = file
+            continue
+        for j in [1, 2, 3]:
+            try:
+                allmedia_ids[file] = api.media_upload(file).media_id_string
+                break
+            except:
+                if j == 3: allmedia_ids[file] = 'error'
+                pass
+    return allmedia_ids
 
 import time
 def add_tweet_to_thread(text, media, attach, reply):
@@ -36,20 +52,16 @@ def add_tweet_to_thread(text, media, attach, reply):
     time.sleep(.5)
     return api.update_status(**parameters).id_str
 
-import sys
-# import os
 # import tkinter as tk
 # from tkinter import filedialog as dialog
 import easygui
-def load_thread(textfile):
-    if len(textfile) > 0:
-        return open(textfile, "r", encoding = "utf8").read()
+import sys
+def load_thread():
     # root = tk.Tk()
     # root.withdraw()
     # f = dialog.askopenfile(mode = "r", filetypes = [('Text', ['.txt'])]).name
-    # path = os.path.realpath(f)
-    path = easygui.fileopenbox(default = '*.txt')
-    return open(path, "r", encoding = "utf8").read()
+    # return = os.path.realpath(f)
+    return easygui.fileopenbox(default = '*.txt')
 
 tweets = []
 if __name__ == '__main__':
@@ -60,39 +72,43 @@ if __name__ == '__main__':
         longitude = float(sys.argv[3])
     except:
         pass
-    tweets = load_thread(file).split("`")
+    if len(file) == 0:
+        file = load_thread()
+    tweets = open(file, "r", encoding = "utf8").read().split("`")
     if len(tweets) == 0 or tweets[0] == '':
         sys.exit("Error: thread is empty!")
 
 thread = [['', [], '', ''] for t in tweets]
 last = ''
-for i in range(len(thread)):
-    media = []
+
+for i, tweet in enumerate(thread):
     text = tweets[i].strip()
     if i == 0 and text.startswith("REPLY<"):
         last = text[:text.find('>')].split('<')[1]
         text = text[text.find('\n') + 1:]
     if text.endswith(">MEDIA"):
-        media = text[text.rfind('<') + 1:].split('>')[0].split('|')
-        text = text[:text.rfind('\n')].strip()
+        tweet[1] = text[text.rfind('<') + 1:].split('>')[0].split('|')
+        text = text[:text.rfind('\n')]
     if text.endswith(">ATTACH"):
-        thread[i][2] = text[text.rfind('<') + 1:].split('>')[0]
-        text = text[:text.rfind('\n')].strip()
-    thread[i][0] = text
-    thread[i][1] = [api.media_upload(m).media_id_string for m in media]
+        tweet[2] = text[text.rfind('<') + 1:].split('>')[0]
+        text = text[:text.rfind('\n')]
+    tweet[0] = text.strip()
 
-for tweet in thread:
-    tweet[3] = last
-    for j in [1, 2, 3]:
-        try:
-            last = add_tweet_to_thread(*tweet)
-        except:
-            last = 'error'
-            pass
-        if last != 'error':
-            print("tweet", i+1, "is sent! id:", last)
-            break;
-        elif j < 3:
-            print("an error occurred. retrying...")
+uploaded = upload_all_media(m[1] for m in thread if len(m[1]) > 0)
+if 'error' in uploaded.values():
+    print("Error: some media failed to upload.")
+    text = "`".join(tweets)
+    for file in uploaded:
+        if uploaded[file] == 'error':
+            print(repr(file), ':', uploaded[file])
         else:
-            raise SystemExit("Connection error or whatever!")
+            text = text.replace(file, uploaded[file])
+    with open('backup.txt', 'w', encoding = 'utf8') as backup_file:
+        backup_file.write(text)
+    sys.exit()
+
+for i, tweet in enumerate(thread, start = 1):
+    tweet[3] = last
+    tweet[1] = [uploaded[m] for m in tweet[1]]
+    last = add_tweet_to_thread(*tweet)
+    print("tweet", i, "is sent! id:", last)
