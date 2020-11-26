@@ -5,20 +5,24 @@ Created on Fri Nov 20 19:33:11 2020
 @author: polfosol
 """
 
+APIkey = "Enter your API key here"
+APIsecret = "then set the API secret key"
+AccessToken = "here is your access token..."
+AccessTokenSecret = "and, access token secret"
+# >> Location is Paris, France (Yeah bitch!):
+latitude = 48.86
+longitude = 2.35
+
 import tweepy
-auth = tweepy.OAuthHandler(
-    "placeholder for: API key",
-    "placeholder for: API secret key")
-auth.set_access_token(
-    "placeholder for: Access token",
-    "placeholder for: Access token secret")
+auth = tweepy.OAuthHandler(APIkey, APIsecret)
+auth.set_access_token(AccessToken, AccessTokenSecret)
 api = tweepy.API(auth)
 
 import time
 def add_tweet_to_thread(text, media, attach, reply):
     parameters = dict(status = text,
-                      lat = 48.86,
-                      long = 2.35,
+                      lat = latitude,
+                      long = longitude,
                       display_coordinates = True,
                       enable_dmcommands = True)
     if len(attach) > 0:
@@ -28,10 +32,8 @@ def add_tweet_to_thread(text, media, attach, reply):
     if reply.endswith('-'):
         parameters.update(auto_populate_reply_metadata = True)
     if len(media) > 0:
-        images = [api.media_upload(m).media_id_string for m in media]
-        parameters.update(media_ids = images)
-    else:
-        time.sleep(.5)
+        parameters.update(media_ids = media)
+    time.sleep(.5)
     return api.update_status(**parameters).id_str
 
 import sys
@@ -54,6 +56,8 @@ if __name__ == '__main__':
     file = ''
     try:
         file = sys.argv[1]
+        latitude = float(sys.argv[2])
+        longitude = float(sys.argv[3])
     except:
         pass
     tweets = load_thread(file).split("`")
@@ -63,21 +67,25 @@ if __name__ == '__main__':
 thread = [['', [], '', ''] for t in tweets]
 last = ''
 for i in range(len(thread)):
+    media = []
     text = tweets[i].strip()
     if i == 0 and text.startswith("REPLY<"):
         last = text[:text.find('>')].split('<')[1]
         text = text[text.find('\n') + 1:]
     if text.endswith(">MEDIA"):
-        thread[i][1] = text[text.rfind('<') + 1:].split('>')[0].split('|')
+        media = text[text.rfind('<') + 1:].split('>')[0].split('|')
         text = text[:text.rfind('\n')].strip()
     if text.endswith(">ATTACH"):
         thread[i][2] = text[text.rfind('<') + 1:].split('>')[0]
         text = text[:text.rfind('\n')].strip()
     thread[i][0] = text
-    thread[i][3] = last
+    thread[i][1] = [api.media_upload(m).media_id_string for m in media]
+
+for tweet in thread:
+    tweet[3] = last
     for j in [1, 2, 3]:
         try:
-            last = add_tweet_to_thread(*(thread[i]))
+            last = add_tweet_to_thread(*tweet)
         except:
             last = 'error'
             pass
