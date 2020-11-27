@@ -10,8 +10,8 @@ APIConsumerSecret = "then set the API secret key"
 AccessToken = "here is your access token..."
 AccessTokenSecret = "and, access token secret"
 # >> Location is Paris, France (Yeah bitch!):
-latitude = 48.86
-longitude = 2.35
+latitude = 48.86  # 29.98   -12.046
+longitude = 2.35  # 31.134  -77.043 which is Cairo and Lima
 
 import tweepy
 auth = tweepy.OAuthHandler(APIkey, APIConsumerSecret)
@@ -23,7 +23,7 @@ def upload_all_media(allfiles, backup):
     allmedia_ids = dict()
     for file in allfiles:
         if not os.path.isfile(file):
-            allmedia_ids[file] = file
+            allmedia_ids[file] = 'error' if ':' in file else file
             continue
         for j in [1, 2, 3]:
             try:
@@ -93,13 +93,13 @@ last = ''
 for i, tweet in enumerate(thread):
     text = tweets[i].strip()
     if i == 0 and text.startswith("REPLY<"):
-        last = text[:text.find('>')].replace('/', '<').split('<')[-1]
+        last = text[:text.find('>')][text.find('<') + 1:].split('/')[-1]
         text = text[text.find('\n') + 1:]
     if text.endswith(">MEDIA"):
-        tweet[1] = text[text.rfind('<') + 1:].split('>')[0].split('|')
+        tweet[1] = text[:text.rfind('>')][text.rfind('<') + 1:].split('|')
         text = text[:text.rfind('\n')]
     if text.endswith(">ATTACH"):
-        tweet[2] = text[text.rfind('<') + 1:].split('>')[0]
+        tweet[2] = text[:text.rfind('>')][text.rfind('<') + 1:]
         text = text[:text.rfind('\n')]
     tweet[0] = text.strip()
 
