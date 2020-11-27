@@ -33,7 +33,7 @@ def upload_all_media(allfiles, backup):
             except:
                 if j == 3:
                     allmedia_ids[file] = 'error'
-                    print("Error... failed to upload", file)
+                    print("Error: failed to upload", file)
                 pass
     # verify:
     if 'error' in allmedia_ids.values():
@@ -93,7 +93,7 @@ last = ''
 for i, tweet in enumerate(thread):
     text = tweets[i].strip()
     if i == 0 and text.startswith("REPLY<"):
-        last = text[:text.find('>')].split('<')[1]
+        last = text[:text.find('>')].replace('/', '<').split('<')[-1]
         text = text[text.find('\n') + 1:]
     if text.endswith(">MEDIA"):
         tweet[1] = text[text.rfind('<') + 1:].split('>')[0].split('|')
@@ -110,4 +110,4 @@ for i, tweet in enumerate(thread, start = 1):
     tweet[3] = last
     tweet[1] = [uploaded[m] for m in tweet[1]]
     last = add_tweet_to_thread(*tweet)
-    print("tweet", i, "is sent! id:", last)
+    print("tweet", i, "is sent!")
