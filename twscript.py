@@ -19,19 +19,27 @@ auth.set_access_token(AccessToken, AccessTokenSecret)
 api = tweepy.API(auth)
 
 import os
-def upload_all_media(allfiles):
+def upload_all_media(allfiles, backup):
     allmedia_ids = dict()
-    for file in (m for pack in allfiles for m in pack):
+    for file in allfiles:
         if not os.path.isfile(file):
             allmedia_ids[file] = file
             continue
         for j in [1, 2, 3]:
             try:
                 allmedia_ids[file] = api.media_upload(file).media_id_string
+                backup = backup.replace(file, allmedia_ids[file])
                 break
             except:
-                if j == 3: allmedia_ids[file] = 'error'
+                if j == 3:
+                    allmedia_ids[file] = 'error'
+                    print("Error... failed to upload", file)
                 pass
+    # verify:
+    if 'error' in allmedia_ids.values():
+        with open('backup', 'w', encoding = 'utf8') as backup_file:
+            backup_file.write(backup)
+        sys.exit("process is terminated due to these errors.")
     return allmedia_ids
 
 import time
@@ -60,7 +68,7 @@ def load_thread():
     # root = tk.Tk()
     # root.withdraw()
     # f = dialog.askopenfile(mode = "r", filetypes = [('Text', ['.txt'])]).name
-    # return = os.path.realpath(f)
+    # return os.path.realpath(f)
     return easygui.fileopenbox(default = '*.txt')
 
 tweets = []
@@ -75,6 +83,7 @@ if __name__ == '__main__':
     if len(file) == 0:
         file = load_thread()
     tweets = open(file, "r", encoding = "utf8").read().split("`")
+    print("processing content...")
     if len(tweets) == 0 or tweets[0] == '':
         sys.exit("Error: thread is empty!")
 
@@ -94,18 +103,8 @@ for i, tweet in enumerate(thread):
         text = text[:text.rfind('\n')]
     tweet[0] = text.strip()
 
-uploaded = upload_all_media(m[1] for m in thread if len(m[1]) > 0)
-if 'error' in uploaded.values():
-    print("Error: some media failed to upload.")
-    text = "`".join(tweets)
-    for file in uploaded:
-        if uploaded[file] == 'error':
-            print(repr(file), ':', uploaded[file])
-        else:
-            text = text.replace(file, uploaded[file])
-    with open('backup.txt', 'w', encoding = 'utf8') as backup_file:
-        backup_file.write(text)
-    sys.exit()
+media_files = (m for tweet in thread for m in tweet[1])
+uploaded = upload_all_media(media_files, "`".join(tweets))
 
 for i, tweet in enumerate(thread, start = 1):
     tweet[3] = last
