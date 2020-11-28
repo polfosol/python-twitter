@@ -23,22 +23,22 @@ med = uploader(APIkey, APIConsumerSecret, AccessToken, AccessTokenSecret)
 
 import os
 def upload_the_media(file):
-    text = 'error'
+    m_id = 'error'
     for j in [1, 2, 3]:
         try:
-            if os.path.getsize(file) > 4000000:
+            if os.path.getsize(file) > 2000000:
                 med.upload_init(file)
                 med.upload_append()
                 med.upload_finalize()
-                text = str(med.media_id)
+                m_id = str(med.media_id)
             else:
-                text = api.media_upload(file).media_id_string
+                m_id = api.media_upload(file).media_id_string
             break
         except:
             if j == 3:
                 print("Error: failed to upload", file)
             pass
-    return text
+    return m_id
 
 def upload_all_media(allfiles, backup):
     allmedia_ids = dict()
