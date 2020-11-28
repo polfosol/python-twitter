@@ -135,35 +135,6 @@ class twitter_media(object):
     self.check_status()
 
 
-  def check_status(self):
-    '''
-    Checks video processing status
-    '''
-    if self.processing_info is None:
-        return
-
-    state = self.processing_info['state']
-    print('Media processing status is %s ' % state)
-
-    if state == u'succeeded':
-        return
-    if state == u'failed':
-        raise Exception('Failed to verify the uploaded media')
-
-    check_after_secs = self.processing_info['check_after_secs']    
-    print('Checking after %s seconds' % str(check_after_secs))
-    time.sleep(check_after_secs)
-
-    print('STATUS')
-    params = {
-        'command': 'STATUS',
-        'media_id': self.media_id
-    }
-    req = requests.get(url = MEDIA_ENDPOINT, params = params, auth = self.oauth)
-    self.processing_info = req.json().get('processing_info', None)
-    self.check_status()
-
-
 # FILE_NAME = 'C:/path/to/media/test.gif'
 # CONSUMER_KEY = 'api consumer key'
 # CONSUMER_SECRET = 'api consumer secret'
