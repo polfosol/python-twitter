@@ -18,23 +18,37 @@ auth = tweepy.OAuthHandler(APIkey, APIConsumerSecret)
 auth.set_access_token(AccessToken, AccessTokenSecret)
 api = tweepy.API(auth)
 
+from large_media import twitter_media as uploader
+med = uploader(APIkey, APIConsumerSecret, AccessToken, AccessTokenSecret)
+
 import os
+def upload_the_media(file):
+    text = 'error'
+    for j in [1, 2, 3]:
+        try:
+            if os.path.getsize(file) > 4000000:
+                med.upload_init(file)
+                med.upload_append()
+                med.upload_finalize()
+                text = str(med.media_id)
+            else:
+                text = api.media_upload(file).media_id_string
+            break
+        except:
+            if j == 3:
+                print("Error: failed to upload", file)
+            pass
+    return text
+
 def upload_all_media(allfiles, backup):
     allmedia_ids = dict()
     for file in allfiles:
         if not os.path.isfile(file):
             allmedia_ids[file] = 'error' if ':' in file else file
             continue
-        for j in [1, 2, 3]:
-            try:
-                allmedia_ids[file] = api.media_upload(file).media_id_string
-                backup = backup.replace(file, allmedia_ids[file])
-                break
-            except:
-                if j == 3:
-                    allmedia_ids[file] = 'error'
-                    print("Error: failed to upload", file)
-                pass
+        allmedia_ids[file] = upload_the_media(file)
+        if allmedia_ids[file] != 'error':
+            backup = backup.replace(file, allmedia_ids[file])
     # verify:
     if 'error' in allmedia_ids.values():
         with open('backup', 'w', encoding = 'utf8') as backup_file:
