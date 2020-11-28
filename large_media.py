@@ -6,7 +6,6 @@ Created on Sat Nov 28 11:48:30 2020
 """
 
 import os
-import sys
 import time
 import mimetypes
 import requests
@@ -24,6 +23,7 @@ class twitter_media(object):
     self.oauth = OAuth1(api_key, client_secret = api_secret,
                         resource_owner_key = access_token,
                         resource_owner_secret = token_secret)
+
 
   def open(self, file_name):
     '''
@@ -88,7 +88,7 @@ class twitter_media(object):
         bytes_sent = file.tell()
         print('%s of %s bytes uploaded' % (str(bytes_sent), str(self.total_bytes)))
 
-    print('Upload chunks complete.')
+    print('Upload chunks complete. ID:', self.media_id)
 
 
   def upload_finalize(self):
@@ -101,7 +101,36 @@ class twitter_media(object):
         'media_id': self.media_id
     }
     req = requests.post(url = MEDIA_ENDPOINT, data = data, auth = self.oauth)
-    print(req.json())
+    # print(req.json())
+    self.processing_info = req.json().get('processing_info', None)
+    self.check_status()
+
+
+  def check_status(self):
+    '''
+    Checks video processing status
+    '''
+    if self.processing_info is None:
+        return
+
+    state = self.processing_info['state']
+    print('Media processing status is %s ' % state)
+
+    if state == u'succeeded':
+        return
+    if state == u'failed':
+        raise Exception('Failed to verify the uploaded media')
+
+    check_after_secs = self.processing_info['check_after_secs']    
+    print('Checking after %s seconds' % str(check_after_secs))
+    time.sleep(check_after_secs)
+
+    print('STATUS')
+    params = {
+        'command': 'STATUS',
+        'media_id': self.media_id
+    }
+    req = requests.get(url = MEDIA_ENDPOINT, params = params, auth = self.oauth)
     self.processing_info = req.json().get('processing_info', None)
     self.check_status()
 
