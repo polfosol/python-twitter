@@ -11,7 +11,6 @@ import time
 import mimetypes
 
 MEDIA_ENDPOINT_URL = 'https://upload.twitter.com/1.1/media/upload.json'
-POST_TWEET_URL = 'https://api.twitter.com/1.1/statuses/update.json'
 
 import requests
 from requests_oauthlib import OAuth1
@@ -57,7 +56,7 @@ class twitter_media(object):
     req = requests.post(url = MEDIA_ENDPOINT_URL, data = data, auth = self.oauth)
     media_id = req.json()['media_id']
     self.media_id = media_id
-    print('INITIALIZED. ID:', media_id)
+    print('INIT uploading', os.path.split(file_name)[-1])
 
 
   def upload_append(self):
@@ -136,11 +135,11 @@ class twitter_media(object):
     self.check_status()
 
 
+FILE_NAME = 'C:/path/to/media/test.gif'
 CONSUMER_KEY = 'api consumer key'
 CONSUMER_SECRET = 'api consumer secret'
 ACCESS_TOKEN = 'access token'
 ACCESS_TOKEN_SECRET = 'token secret'
-FILE_NAME = 'C:/path/to/media/test.gif'
 
 if __name__ == '__main__':
   tm = twitter_media(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
