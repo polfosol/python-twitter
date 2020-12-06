@@ -26,7 +26,7 @@ def upload_the_media(file):
     m_id = 'error'
     for j in [1, 2, 3]:
         try:
-            if os.path.getsize(file) > 2000000:
+            if os.path.getsize(file) > 150000:
                 med.upload_init(file)
                 med.upload_append()
                 med.upload_finalize()
@@ -50,9 +50,9 @@ def upload_all_media(allfiles, backup):
         if allmedia_ids[file] != 'error':
             backup = backup.replace(file, allmedia_ids[file])
     # verify:
+    with open('backup', 'w', encoding = 'utf8') as backup_file:
+        backup_file.write(backup)
     if 'error' in allmedia_ids.values():
-        with open('backup', 'w', encoding = 'utf8') as backup_file:
-            backup_file.write(backup)
         sys.exit("process is terminated due to these errors.")
     return allmedia_ids
 
@@ -71,6 +71,7 @@ def add_tweet_to_thread(text, media, attach, reply):
         parameters.update(auto_populate_reply_metadata = True)
     if len(media) > 0:
         parameters.update(media_ids = media)
+        parameters.update(possibly_sensitive = False)
     time.sleep(.5)
     return api.update_status(**parameters).id_str
 
@@ -96,7 +97,8 @@ if __name__ == '__main__':
         pass
     if len(file) == 0:
         file = load_thread()
-    tweets = open(file, "r", encoding = "utf8").read().split("`")
+    with open(file, 'r', encoding = 'utf8') as t:
+        tweets = t.read().split("`")
     print("processing content...")
     if len(tweets) == 0 or tweets[0] == '':
         sys.exit("Error: thread is empty!")
@@ -107,7 +109,7 @@ last = ''
 for i, tweet in enumerate(thread):
     text = tweets[i].strip()
     if i == 0 and text.startswith("REPLY<"):
-        last = text[:text.find('>')][text.find('<') + 1:].split('/')[-1]
+        last = text[:text.find('>')][text.find('<') + 1:].split('/')[-1] + '-'
         text = text[text.find('\n') + 1:]
     if text.endswith(">MEDIA"):
         tweet[1] = text[:text.rfind('>')][text.rfind('<') + 1:].split('|')
@@ -123,5 +125,14 @@ uploaded = upload_all_media(media_files, "`".join(tweets))
 for i, tweet in enumerate(thread, start = 1):
     tweet[3] = last
     tweet[1] = [uploaded[m] for m in tweet[1]]
-    last = add_tweet_to_thread(*tweet)
-    print("tweet", i, "is sent!")
+    try:
+        last = add_tweet_to_thread(*tweet)
+        print("tweet", i, "is sent!")
+    except:
+        with open('backup', 'r', encoding = 'utf8') as backup_file:
+            tweets = backup_file.read().split("`")[i - 1:]
+        if last != '' and i > 1:
+            tweets[0] = "REPLY<" + last + ">\n" + tweets[0]
+        with open('backup', 'w', encoding = 'utf8') as backup_file:
+            backup_file.write("`".join(tweets))
+        sys.exit()
